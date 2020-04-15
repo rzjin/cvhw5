@@ -27,51 +27,36 @@ class Net(nn.Module):
             #########################################
             ###        TODO: Add more layers      ###
             #########################################
-            nn.Conv2d(3, 64, 3,1, padding=1),
+            nn.Conv2d(3, 32, 3,2, padding=1),
+            nn.BatchNorm2d(32),
+            # nn.ReLU(inplace=True),
+            # torch.nn.Dropout2d(p=0.2),
+
             nn.ReLU(inplace=True),
-            nn.Conv2d(64, 64, 3, 1, padding=1),
+            nn.Conv2d(32, 64, 3, 2, padding=1),
+            nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(3,2,1),
+            # torch.nn.Dropout2d(p=0.2),
+
+            # nn.ReLU(inplace=True),
+            nn.Conv2d(64, 128, 3, 2, padding=1),
+            nn.BatchNorm2d(128),
             nn.ReLU(inplace=True),
-            nn.Conv2d(64, 128, 3,1, padding=1),
+            # torch.nn.Dropout2d(p=0.2),
+
+            # nn.ReLU(inplace=True),
+            nn.Conv2d(128, 64, 3, 2, padding=1),
+            nn.BatchNorm2d(64),
+            # nn.ReLU(inplace=True),
+            # torch.nn.Dropout2d(p=0.2),
+
+            # nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(64, self.n_class, 3, 1, padding=1),
             nn.ReLU(inplace=True),
-            nn.Conv2d(128, 128, 3, 1, padding=1),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(3, 2, 1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(128, 256, 3, 1, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(256, 256, 3, 1, padding=1),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(3, 2, 1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(256, 512, 3, 1, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(512, 512, 3, 1, padding=1),
-            nn.ReLU(inplace=True),
-            # #Down to a 64*64
-            # nn.ConvTranspose2d(256, 256, 3,2, padding=1),
-            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(512, 256, 3, 1, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(256, 256, 3, 1, padding=1),
-            nn.ReLU(inplace=True),
-            # nn.ConvTranspose2d(128, 128, 3, 2, padding=1),
-            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(256, 128, 3, 1, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(128, 128, 3, 1, padding=1),
-            nn.ReLU(inplace=True),
-            # nn.ConvTranspose2d(64, 64, 3, 2, padding=0),
-            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(128, 64, 3,1, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(64, self.n_class, 3, 1, padding=1),
-            nn.ReLU(inplace=True),
+            nn.Upsample(scale_factor=16, mode='bilinear', align_corners=True),
+            # nn.ReLU(inplace=True),
         )
+
 
     def forward(self, x):
         x = self.layers(x)
@@ -201,20 +186,20 @@ def main():
     train_data = FacadeDataset(flag='train', data_range=(0,20), onehot=False)
     train_loader = DataLoader(train_data, batch_size=16)
     test_data = FacadeDataset(flag='test_dev', data_range=(0,114), onehot=False)
-    test_loader = DataLoader(test_data, batch_size=16)
+    test_loader = DataLoader(test_data, batch_size=1)
     ap_data = FacadeDataset(flag='test_dev', data_range=(0,114), onehot=True)
-    ap_loader = DataLoader(ap_data, batch_size=16)
+    ap_loader = DataLoader(ap_data, batch_size=1)
 
     name = 'starter_net'
     net = Net().to(device)
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(net.parameters(), 1e-3, weight_decay=1e-5)
+    optimizer = torch.optim.Adam(net.parameters(), 1e-3, weight_decay=15e-4)
 
     print('\nStart training')
-    for epoch in range(10): #TODO: Change the number of epochs
+    for epoch in range(15): #TODO: Change the number of epochs
         print('-----------------Epoch = %d-----------------' % (epoch+1))
         train(train_loader, net, criterion, optimizer, device, epoch+1)
-        test(train_loader, net, criterion, device)
+        test(test_loader, net, criterion, device)
         # TODO: Evaluate on the validation set you created previously
 
     print('\nFinished Training, Testing on test set')
